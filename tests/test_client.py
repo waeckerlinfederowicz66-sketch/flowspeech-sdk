@@ -1,5 +1,6 @@
 import json
 
+import httpx
 import pytest
 
 from flowspeech_sdk import (
@@ -118,3 +119,49 @@ def test_environment_key(monkeypatch):
     monkeypatch.delenv("FLOWSPEECH_API_KEY")
     with pytest.raises(FlowSpeechError):
         FlowSpeechClient()
+
+
+@pytest.mark.parametrize("method,value,expected_field", [
+    ("get_job", JOB, "job_id"),
+    ("find_job", REQUEST, "request_id"),
+    ("cancel_job", JOB, "job_id"),
+    ("download", JOB, "job_id"),
+])
+def test_lookup_transport_failure_preserves_supplied_id(monkeypatch, factory, method, value, expected_field):
+    adapter, calls, _, _ = factory([httpx.ConnectError("offline")], max_retries=0)
+    sdk = wrap(monkeypatch, adapter)
+    with pytest.raises(FlowSpeechError) as caught:
+        getattr(sdk, method)(value)
+    assert getattr(caught.value, expected_field) == value
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("status", [401, 403])
+def test_storage_auth_failure_is_not_api_auth_failure(monkeypatch, factory, status):
+    adapter, _, _, _ = factory([response(job())], [httpx.Response(status, text="denied")])
+    sdk = wrap(monkeypatch, adapter)
+    with pytest.raises(FlowSpeechConnectionError) as caught:
+        sdk.synthesize("Hello", request_id=REQUEST)
+    assert not isinstance(caught.value, FlowSpeechAuthError)
+    assert caught.value.code == "download_failed"
+    assert caught.value.request_id == REQUEST and caught.value.job_id == JOB
+    assert caught.value.result_url == job()["result"]["url"]
+
+
+def test_download_metadata_failure_keeps_safe_url(monkeypatch, factory):
+    broken = job()
+    broken["result"]["sampleRate"] = 8000
+    adapter, _, downloads, _ = factory([response(broken)])
+    sdk = wrap(monkeypatch, adapter)
+    with pytest.raises(FlowSpeechError) as caught:
+        sdk.download(JOB)
+    assert caught.value.request_id == REQUEST and caught.value.job_id == JOB
+    assert caught.value.result_url == broken["result"]["url"]
+    assert not downloads
+
+
+def test_text_whitespace_compatibility(monkeypatch, factory):
+    adapter, calls, _, _ = factory([response(job())])
+    sdk = wrap(monkeypatch, adapter)
+    sdk.synthesize("  Hello  ", request_id=REQUEST)
+    assert json.loads(calls[0].content)["input"]["text"] == "Hello"
