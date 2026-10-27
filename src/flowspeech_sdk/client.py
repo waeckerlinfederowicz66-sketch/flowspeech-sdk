@@ -11,7 +11,7 @@ from ._v1 import ApiError, V1Client, identifier, make_input, safe_url
 DEFAULT_API_URL = "https://flowspeech.io/api/v1/tts/jobs"
 DEFAULT_QUOTA_URL = "https://flowspeech.io/api/v1/quota"
 DEFAULT_VOICE = "Kore"
-USER_AGENT = "flowspeech-sdk/0.2.0"
+USER_AGENT = "flowspeech-sdk/0.2.1"
 FlowSpeechError = ApiError
 
 

@@ -37,6 +37,22 @@ def test_multi(monkeypatch, factory):
     assert json.loads(calls[0].content)["input"] == {"mode": "multi", "segments": segments}
 
 
+def test_release_user_agent(monkeypatch, factory):
+    adapter, calls, _, _ = factory([response({
+        "quota": {"remaining": 10, "reserved": 0, "available": 10},
+        "subscription": None, "limits": {},
+    })])
+    from flowspeech_sdk._v1 import V1Client
+
+    def configured(**kwargs):
+        return V1Client(http_client=adapter._client, download_client=adapter._download, **kwargs)
+
+    monkeypatch.setattr("flowspeech_sdk.client.V1Client", configured)
+    with FlowSpeechClient(api_key="synthetic-test-only") as sdk:
+        sdk.get_account()
+    assert calls[0].headers["User-Agent"] == "flowspeech-sdk/0.2.1"
+
+
 def test_read_methods(monkeypatch, factory):
     account = {"quota": {"remaining": 10, "reserved": 0, "available": 10},
                "subscription": {"plan": "basic"}, "limits": {}}

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "flowspeech-sdk"
-version = "0.2.0"
+version = "0.2.1"
 description = "Python SDK for FlowSpeech public API v1 text to speech"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -31,7 +31,7 @@ test = ["pytest>=8,<9"]
 packages = ["src/flowspeech_sdk"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/flowspeech_sdk", "tests", "README.md", "CHANGELOG.md", "PROVENANCE.md", "pyproject.toml", "LICENSE"]
+include = ["src/flowspeech_sdk", "tests", "README.md", "CHANGELOG.md", "RELEASE.md", "PROVENANCE.md", "pyproject.toml", "LICENSE"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

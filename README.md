@@ -5,7 +5,7 @@ An active paid Basic, Pro or Scale subscription and a developer API key are requ
 Trial access does not include API generation. Generation consumes account credits.
 
 ```sh
-pip install flowspeech-sdk==0.2.0
+pip install flowspeech-sdk==0.2.1
 export FLOWSPEECH_API_KEY='YOUR_FLOWSPEECH_API_KEY'
 ```
 
